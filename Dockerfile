@@ -15,5 +15,5 @@ ENV STAGE=${_STAGE}
 # Build the binary.
 RUN GOOS=linux GOARCH=amd64 go build -mod=readonly -v -o server
 
-EXPOSE 5002
+EXPOSE 50001
 CMD GO_ENV=${STAGE} /app/server
