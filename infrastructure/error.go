@@ -14,11 +14,10 @@ func NewErrorHandling() repository.ErrorRepository {
 	return &errorHandling{}
 }
 
-func (e *errorHandling) GetErrorResponse(code int, errMsg string) (res *model.ErrorResponse) {
+func (e *errorHandling) GetErrorResponse(errMsg string) (res *model.ErrorResponse) {
 	log.Printf("INFO start creating error response")
 
 	res = &model.ErrorResponse{
-		Code:    code,
 		Message: errMsg,
 	}
 
