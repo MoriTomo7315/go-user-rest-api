@@ -1,9 +1,11 @@
 package persistence
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
@@ -71,10 +73,13 @@ func (f *firestoreClient) GetUsers() (users []*model.User, err error) {
 		if err != nil {
 			return nil, err
 		}
-		user := &model.User{
-			Id:   userDocSnap.Ref.ID,
-			Name: userDocSnap.Data()["name"].(string),
-		}
+		// Uidをmap[string]interface{}に含める
+		userData := userDocSnap.Data()
+		userData["id"] = userDocSnap.Ref.ID
+		// map[string]interface{} →json []byte -> *model.BookingModel
+		jsonuserData, _ := json.Marshal(userData)
+		var user *model.User
+		json.Unmarshal(jsonuserData, &user)
 		users = append(users, user)
 	}
 
@@ -110,24 +115,26 @@ func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
 	}
 
 	// userドキュメントの中身を返却
-	user = &model.User{
-		Id:   userDocSnap.Ref.ID,
-		Name: userDocSnap.Data()["name"].(string),
-	}
+	// Uidをmap[string]interface{}に含める
+	userData := userDocSnap.Data()
+	userData["id"] = userDocSnap.Ref.ID
+	// map[string]interface{} →json []byte -> *model.BookingModel
+	jsonuserData, _ := json.Marshal(userData)
+	json.Unmarshal(jsonuserData, &user)
 
 	log.Printf("INFO [GetUserById] connecting firestore end. id=%s", id)
 	return user, nil
 }
 
-// firestoreからユーザの情報を取得する
-func (f *firestoreClient) CreateUser(name string) (user *model.User, err error) {
-	log.Printf("INFO [CreateUser] connecting firestore start. name=%s", name)
+// firestoreにユーザの情報を作成する
+func (f *firestoreClient) CreateUser(user *model.User) (id string, err error) {
+	log.Printf("INFO [CreateUser] connecting firestore start. name=%v", user)
 
 	err = loadEnvFile()
 	if err != nil {
 		// .env読めなかった場合の処理
 		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return nil, myError.SYSTEM_ERR
+		return "", myError.SYSTEM_ERR
 	}
 
 	// init firestore client
@@ -137,23 +144,58 @@ func (f *firestoreClient) CreateUser(name string) (user *model.User, err error) 
 
 	if err != nil {
 		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
-		return nil, myError.SYSTEM_ERR
+		return "", myError.SYSTEM_ERR
 	}
 
 	userDocRef, _, err := client.Collection("users").Add(ctx, map[string]interface{}{
-		"name": name,
+		"name":       user.Name,
+		"prefecture": user.Prefecture,
+		"createdAt":  user.CreatedAt,
+		"updated":    user.UpdatedAt,
 	})
 	if err != nil {
 		// Handle any errors in an appropriate way, such as returning them.
 		log.Printf("An error has occurred: %s", err)
 	}
+	id = userDocRef.ID
 
-	// userドキュメントの中身を返却
-	user = &model.User{
-		Id:   userDocRef.ID,
-		Name: name,
+	log.Printf("INFO [CreateUser] connecting firestore end.")
+	return id, nil
+}
+
+// firestoreのユーザ情報を更新する
+func (f *firestoreClient) UpdateUser(user *model.User) (err error) {
+	log.Printf("INFO [UpdateUser] connecting firestore start. user=%v", user)
+
+	err = loadEnvFile()
+	if err != nil {
+		// .env読めなかった場合の処理
+		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
+		return myError.SYSTEM_ERR
 	}
 
-	log.Printf("INFO [CreateUser] connecting firestore end. name=%s", name)
-	return user, nil
+	// init firestore client
+	ctx := context.Background()
+	client, err := initFireStoreClient(ctx)
+	defer client.Close()
+
+	if err != nil {
+		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
+		return myError.SYSTEM_ERR
+	}
+
+	_, err = client.Collection("users").Doc(user.Id).Set(ctx, map[string]interface{}{
+		"name":       user.Name,
+		"prefecture": user.Prefecture,
+		"createdAt":  user.CreatedAt,
+		"updatedAt":  time.Now(),
+	})
+
+	if err != nil {
+		// Handle any errors in an appropriate way, such as returning them.
+		log.Printf("An error has occurred: %s", err)
+	}
+
+	log.Printf("INFO [UpdateUser] connecting firestore end.")
+	return nil
 }

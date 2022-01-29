@@ -67,13 +67,12 @@ func (uc *userController) HandlerHttpRequestWithParameter(w http.ResponseWriter,
 				/api/users/でリクエストが来た場合は/api/userと同じ処理をする（リダイレクト的役割）
 			*/
 			uc.userApplication.CreateUser(w, r)
+		} else {
+			/*
+				/api/users/:userIdでリクエストが来た場合はidがuserIdのuser情報を更新する
+			*/
+			uc.userApplication.UpdateUser(w, r, userId)
 		}
-		// } else {
-		// 	/*
-		// 		/api/users/:userIdでリクエストが来た場合はidがuserIdのuser情報を更新する
-		// 	*/
-		//	uc.userApplication.UpdateUser(w, r, userId)
-		// }
 	// case http.MethodDelete:
 	// 	if len(userId) == 0 {
 	// 		w.WriteHeader(400)
