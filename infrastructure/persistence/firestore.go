@@ -150,8 +150,8 @@ func (f *firestoreClient) CreateUser(user *model.User) (id string, err error) {
 	userDocRef, _, err := client.Collection("users").Add(ctx, map[string]interface{}{
 		"name":       user.Name,
 		"prefecture": user.Prefecture,
-		"createdAt":  user.CreatedAt,
-		"updated":    user.UpdatedAt,
+		"createdAt":  time.Now(),
+		"updated":    nil,
 	})
 	if err != nil {
 		// Handle any errors in an appropriate way, such as returning them.
