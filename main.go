@@ -32,7 +32,9 @@ func main() {
 	userController := controller.NewUserController(userApplication)
 	//サーバーにController(ハンドラ)を登録
 	log.Printf("/api/users   start")
+
 	http.HandleFunc("/api/users", userController.HandlerHttpRequest)
+	http.HandleFunc("/api/users/", userController.HandlerHttpRequestWithParameter)
 
 	server.ListenAndServe()
 }

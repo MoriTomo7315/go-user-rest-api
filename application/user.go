@@ -10,11 +10,11 @@ import (
 
 // インターフェース
 type UserApplication interface {
-	// GetUsers(w http.ResponseWriter, r *http.Request)
-	GetUserById(w http.ResponseWriter, r *http.Request)
+	GetUsers(w http.ResponseWriter, r *http.Request)
+	GetUserById(w http.ResponseWriter, r *http.Request, userId string)
 	// CreateUser(w http.ResponseWriter, r *http.Request)
-	// UpdateUser(w http.ResponseWriter, r *http.Request)
-	// DeleteUser(w http.ResponseWriter, r *http.Request)
+	// UpdateUser(w http.ResponseWriter, r *http.Request, userId string)
+	// DeleteUser(w http.ResponseWriter, r *http.Request, userId string)
 }
 
 type userApplication struct {
@@ -31,15 +31,21 @@ func NewUserApplication(fr repository.FirestoreRepository, er repository.ErrorRe
 }
 
 // ユーザ一覧取得
-// func (ua userApplication) GetUsers(w http.ResponseWriter, r *http.Request) {
+func (ua userApplication) GetUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := ua.firestoreRepository.GetUsers()
+	if err != nil {
+		log.Fatal(err)
+	}
+	res, err := json.Marshal(users)
 
-// }
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+}
 
 // ID指定でユーザ取得
-func (ua userApplication) GetUserById(w http.ResponseWriter, r *http.Request) {
+func (ua userApplication) GetUserById(w http.ResponseWriter, r *http.Request, userId string) {
 
-	id := r.FormValue("id")
-	user, err := ua.firestoreRepository.GetUserById(id)
+	user, err := ua.firestoreRepository.GetUserById(userId)
 	if err != nil {
 		log.Fatal(err)
 	}
