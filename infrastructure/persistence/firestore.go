@@ -84,7 +84,7 @@ func (f *firestoreClient) GetUsers() (users []*model.User, err error) {
 
 // firestoreからユーザの情報を取得する
 func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
-	log.Printf("INFO [GetUserById] connecting firestore start. id=%v", id)
+	log.Printf("INFO [GetUserById] connecting firestore start. id=%s", id)
 
 	err = loadEnvFile()
 	if err != nil {
@@ -105,7 +105,7 @@ func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
 
 	userDocSnap, err := client.Collection("users").Doc(id).Get(ctx)
 	if err != nil {
-		log.Printf("ERROR firestoreからusersコレクションの検索に失敗 id=%v, err=%v", id, err)
+		log.Printf("ERROR firestoreからusersコレクションの検索に失敗 id=%s, err=%v", id, err)
 		return nil, myError.NOT_FOUND_USER
 	}
 
@@ -115,6 +115,45 @@ func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
 		Name: userDocSnap.Data()["name"].(string),
 	}
 
-	log.Printf("INFO [GetUserById] connecting firestore end. id=%v", id)
+	log.Printf("INFO [GetUserById] connecting firestore end. id=%s", id)
+	return user, nil
+}
+
+// firestoreからユーザの情報を取得する
+func (f *firestoreClient) CreateUser(name string) (user *model.User, err error) {
+	log.Printf("INFO [CreateUser] connecting firestore start. name=%s", name)
+
+	err = loadEnvFile()
+	if err != nil {
+		// .env読めなかった場合の処理
+		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
+		return nil, myError.SYSTEM_ERR
+	}
+
+	// init firestore client
+	ctx := context.Background()
+	client, err := initFireStoreClient(ctx)
+	defer client.Close()
+
+	if err != nil {
+		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
+		return nil, myError.SYSTEM_ERR
+	}
+
+	userDocRef, _, err := client.Collection("users").Add(ctx, map[string]interface{}{
+		"name": name,
+	})
+	if err != nil {
+		// Handle any errors in an appropriate way, such as returning them.
+		log.Printf("An error has occurred: %s", err)
+	}
+
+	// userドキュメントの中身を返却
+	user = &model.User{
+		Id:   userDocRef.ID,
+		Name: name,
+	}
+
+	log.Printf("INFO [CreateUser] connecting firestore end. name=%s", name)
 	return user, nil
 }
