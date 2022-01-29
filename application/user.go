@@ -2,9 +2,11 @@ package application
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 
+	"github.com/MoriTomo7315/go-user-rest-api/domain/model"
 	"github.com/MoriTomo7315/go-user-rest-api/domain/repository"
 )
 
@@ -12,7 +14,7 @@ import (
 type UserApplication interface {
 	GetUsers(w http.ResponseWriter, r *http.Request)
 	GetUserById(w http.ResponseWriter, r *http.Request, userId string)
-	// CreateUser(w http.ResponseWriter, r *http.Request)
+	CreateUser(w http.ResponseWriter, r *http.Request)
 	// UpdateUser(w http.ResponseWriter, r *http.Request, userId string)
 	// DeleteUser(w http.ResponseWriter, r *http.Request, userId string)
 }
@@ -56,9 +58,20 @@ func (ua userApplication) GetUserById(w http.ResponseWriter, r *http.Request, us
 }
 
 // ユーザ作成
-// func (ua userApplication) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (ua userApplication) CreateUser(w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
 
-// }
+	var user *model.User
+	json.Unmarshal(body, &user)
+	user, err := ua.firestoreRepository.CreateUser(user.Name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	res, err := json.Marshal(user)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
+}
 
 // // ユーザ更新
 // func (ua userApplication) UpdateUser(w http.ResponseWriter, r *http.Request) {
