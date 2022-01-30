@@ -73,12 +73,12 @@ func (uc *userController) HandlerHttpRequestWithParameter(w http.ResponseWriter,
 			*/
 			uc.userApplication.UpdateUser(w, r, userId)
 		}
-	// case http.MethodDelete:
-	// 	if len(userId) == 0 {
-	// 		w.WriteHeader(400)
-	// 	} else {
-	// 		uc.userApplication.DeleteUser(w, r, userId)
-	// 	}
+	case http.MethodDelete:
+		if len(userId) == 0 {
+			w.WriteHeader(400)
+		} else {
+			uc.userApplication.DeleteUser(w, r, userId)
+		}
 	default:
 		/*
 			GET, POST, DELETE以外のhttp methodは許可しない
