@@ -127,14 +127,14 @@ func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
 }
 
 // firestoreにユーザの情報を作成する
-func (f *firestoreClient) CreateUser(user *model.User) (id string, err error) {
+func (f *firestoreClient) CreateUser(user *model.User) (err error) {
 	log.Printf("INFO [CreateUser] connecting firestore start. name=%v", user)
 
 	err = loadEnvFile()
 	if err != nil {
 		// .env読めなかった場合の処理
 		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return "", myError.SYSTEM_ERR
+		return myError.SYSTEM_ERR
 	}
 
 	// init firestore client
@@ -144,10 +144,10 @@ func (f *firestoreClient) CreateUser(user *model.User) (id string, err error) {
 
 	if err != nil {
 		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
-		return "", myError.SYSTEM_ERR
+		return myError.SYSTEM_ERR
 	}
 
-	userDocRef, _, err := client.Collection("users").Add(ctx, map[string]interface{}{
+	_, _, err = client.Collection("users").Add(ctx, map[string]interface{}{
 		"name":       user.Name,
 		"prefecture": user.Prefecture,
 		"createdAt":  time.Now(),
@@ -157,10 +157,9 @@ func (f *firestoreClient) CreateUser(user *model.User) (id string, err error) {
 		// Handle any errors in an appropriate way, such as returning them.
 		log.Printf("An error has occurred: %s", err)
 	}
-	id = userDocRef.ID
 
 	log.Printf("INFO [CreateUser] connecting firestore end.")
-	return id, nil
+	return nil
 }
 
 // firestoreのユーザ情報を更新する
@@ -197,5 +196,37 @@ func (f *firestoreClient) UpdateUser(user *model.User) (err error) {
 	}
 
 	log.Printf("INFO [UpdateUser] connecting firestore end.")
+	return nil
+}
+
+// firestoreのユーザ情報を更新する
+func (f *firestoreClient) DeleteUser(id string) (err error) {
+	log.Printf("INFO [DeleteUser] connecting firestore start. userId=%v", id)
+
+	err = loadEnvFile()
+	if err != nil {
+		// .env読めなかった場合の処理
+		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
+		return myError.SYSTEM_ERR
+	}
+
+	// init firestore client
+	ctx := context.Background()
+	client, err := initFireStoreClient(ctx)
+	defer client.Close()
+
+	if err != nil {
+		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
+		return myError.SYSTEM_ERR
+	}
+
+	_, err = client.Collection("users").Doc(id).Delete(ctx)
+
+	if err != nil {
+		// Handle any errors in an appropriate way, such as returning them.
+		log.Printf("An error has occurred: %s", err)
+	}
+
+	log.Printf("INFO [DeleteUser] connecting firestore end.")
 	return nil
 }

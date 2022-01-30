@@ -23,12 +23,13 @@ func main() {
 		DDD依存関係を定義
 		Infrastructure → Application → Controller
 	*/
+	// response作成infrastructure
+	responseFactory := infrastructure.NewResponseFactory()
 	// error用infrastructure
 	errorHandling := infrastructure.NewErrorHandling()
-
-	// 暗証番号に紐づく予約ユーザの確認を求めるAPI
+	// firestore用infrastructure
 	firestoreClient := persistence.NewFirestoreClient()
-	userApplication := application.NewUserApplication(firestoreClient, errorHandling)
+	userApplication := application.NewUserApplication(firestoreClient, responseFactory, errorHandling)
 	userController := controller.NewUserController(userApplication)
 	//サーバーにController(ハンドラ)を登録
 	log.Printf("/api/users   start")
