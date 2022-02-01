@@ -9,7 +9,7 @@ import (
 
 	firestore "cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
-	myError "github.com/MoriTomo7315/go-user-rest-api/domain/error"
+	"github.com/MoriTomo7315/go-user-rest-api/domain/define"
 	"github.com/MoriTomo7315/go-user-rest-api/domain/model"
 	"github.com/MoriTomo7315/go-user-rest-api/domain/repository"
 	"github.com/joho/godotenv"
@@ -51,7 +51,7 @@ func (f *firestoreClient) GetUsers() (users []*model.User, err error) {
 	if err != nil {
 		// .env読めなかった場合の処理
 		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return nil, myError.SYSTEM_ERR
+		return nil, define.SYSTEM_ERR
 	}
 
 	// init firestore client
@@ -61,7 +61,7 @@ func (f *firestoreClient) GetUsers() (users []*model.User, err error) {
 
 	if err != nil {
 		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
-		return nil, err
+		return nil, define.SYSTEM_ERR
 	}
 
 	iter := client.Collection("users").Documents(ctx)
@@ -71,7 +71,8 @@ func (f *firestoreClient) GetUsers() (users []*model.User, err error) {
 			break
 		}
 		if err != nil {
-			return nil, err
+			log.Printf("ERROR firestoreからusersコレクションの検索に失敗 err=%v", err)
+			return nil, define.NOT_FOUND_USER
 		}
 		// Uidをmap[string]interface{}に含める
 		userData := userDocSnap.Data()
@@ -95,7 +96,7 @@ func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
 	if err != nil {
 		// .env読めなかった場合の処理
 		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return nil, myError.SYSTEM_ERR
+		return nil, define.SYSTEM_ERR
 	}
 
 	// init firestore client
@@ -105,13 +106,13 @@ func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
 
 	if err != nil {
 		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
-		return nil, myError.SYSTEM_ERR
+		return nil, define.SYSTEM_ERR
 	}
 
 	userDocSnap, err := client.Collection("users").Doc(id).Get(ctx)
 	if err != nil {
 		log.Printf("ERROR firestoreからusersコレクションの検索に失敗 id=%s, err=%v", id, err)
-		return nil, myError.NOT_FOUND_USER
+		return nil, define.NOT_FOUND_USER
 	}
 
 	// userドキュメントの中身を返却
@@ -134,7 +135,7 @@ func (f *firestoreClient) CreateUser(user *model.User) (err error) {
 	if err != nil {
 		// .env読めなかった場合の処理
 		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return myError.SYSTEM_ERR
+		return define.SYSTEM_ERR
 	}
 
 	// init firestore client
@@ -144,7 +145,7 @@ func (f *firestoreClient) CreateUser(user *model.User) (err error) {
 
 	if err != nil {
 		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
-		return myError.SYSTEM_ERR
+		return define.SYSTEM_ERR
 	}
 
 	_, _, err = client.Collection("users").Add(ctx, map[string]interface{}{
@@ -154,8 +155,8 @@ func (f *firestoreClient) CreateUser(user *model.User) (err error) {
 		"updated":    nil,
 	})
 	if err != nil {
-		// Handle any errors in an appropriate way, such as returning them.
-		log.Printf("An error has occurred: %s", err)
+		log.Printf("ERROR firestoreのusersコレクションの作成に失敗 err=%v", err)
+		return define.FAILED_CREATE_USER
 	}
 
 	log.Printf("INFO [CreateUser] connecting firestore end.")
@@ -170,7 +171,7 @@ func (f *firestoreClient) UpdateUser(user *model.User) (err error) {
 	if err != nil {
 		// .env読めなかった場合の処理
 		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return myError.SYSTEM_ERR
+		return define.SYSTEM_ERR
 	}
 
 	// init firestore client
@@ -180,7 +181,7 @@ func (f *firestoreClient) UpdateUser(user *model.User) (err error) {
 
 	if err != nil {
 		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
-		return myError.SYSTEM_ERR
+		return define.SYSTEM_ERR
 	}
 
 	_, err = client.Collection("users").Doc(user.Id).Set(ctx, map[string]interface{}{
@@ -191,15 +192,16 @@ func (f *firestoreClient) UpdateUser(user *model.User) (err error) {
 	})
 
 	if err != nil {
-		// Handle any errors in an appropriate way, such as returning them.
-		log.Printf("An error has occurred: %s", err)
+		log.Printf("ERROR firestoreのusersコレクションの更新に失敗 id=%s, err=%v", user.Id, err)
+		return define.FAILED_UPDATE_USER
 	}
+
 
 	log.Printf("INFO [UpdateUser] connecting firestore end.")
 	return nil
 }
 
-// firestoreのユーザ情報を更新する
+// firestoreのユーザ情報を削除する
 func (f *firestoreClient) DeleteUser(id string) (err error) {
 	log.Printf("INFO [DeleteUser] connecting firestore start. userId=%v", id)
 
@@ -207,7 +209,7 @@ func (f *firestoreClient) DeleteUser(id string) (err error) {
 	if err != nil {
 		// .env読めなかった場合の処理
 		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return myError.SYSTEM_ERR
+		return define.SYSTEM_ERR
 	}
 
 	// init firestore client
@@ -217,14 +219,14 @@ func (f *firestoreClient) DeleteUser(id string) (err error) {
 
 	if err != nil {
 		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
-		return myError.SYSTEM_ERR
+		return define.SYSTEM_ERR
 	}
 
 	_, err = client.Collection("users").Doc(id).Delete(ctx)
 
 	if err != nil {
-		// Handle any errors in an appropriate way, such as returning them.
-		log.Printf("An error has occurred: %s", err)
+		log.Printf("ERROR firestoreのusersコレクションの削除に失敗 id=%s, err=%v", id, err)
+		return define.FAILED_DELETE_USER
 	}
 
 	log.Printf("INFO [DeleteUser] connecting firestore end.")

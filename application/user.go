@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	myError "github.com/MoriTomo7315/go-user-rest-api/domain/error"
+	"github.com/MoriTomo7315/go-user-rest-api/application/util"
 	"github.com/MoriTomo7315/go-user-rest-api/domain/model"
 	"github.com/MoriTomo7315/go-user-rest-api/domain/repository"
 )
@@ -22,26 +22,24 @@ type UserApplication interface {
 
 type userApplication struct {
 	firestoreRepository repository.FirestoreRepository
-	responseRepository     repository.ResponseRepository
-	errorRepository     repository.ErrorRepository
 }
 
 // Userデータに関するUseCaseを生成
-func NewUserApplication(fr repository.FirestoreRepository, rr repository.ResponseRepository, er repository.ErrorRepository) UserApplication {
+func NewUserApplication(fr repository.FirestoreRepository) UserApplication {
 	return &userApplication{
 		firestoreRepository: fr,
-		responseRepository: rr,
-		errorRepository:     er,
 	}
 }
 
 // ユーザ一覧取得
 func (ua userApplication) GetUsers(w http.ResponseWriter, r *http.Request) {
+	log.Printf("INFO [GetUsers] Application logic start")
 	users, err := ua.firestoreRepository.GetUsers()
 	if err != nil {
-		log.Fatal(err)
+		util.CreateErrorResponse(w, err, "")
+		return
 	}
-	resModel := ua.responseRepository.GetResponse(http.StatusOK, "ユーザ情報取得に成功しました。", int64(len(users)), users)
+	resModel := util.GetResponse(http.StatusOK, "ユーザ情報取得に成功しました。", int64(len(users)), users)
 	res, _ := json.Marshal(resModel)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -50,18 +48,14 @@ func (ua userApplication) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 // ID指定でユーザ取得
 func (ua userApplication) GetUserById(w http.ResponseWriter, r *http.Request, userId string) {
-
+	log.Printf("INFO [GetUserById] Application logic start")
 	user, err := ua.firestoreRepository.GetUserById(userId)
 	if err != nil {
-		log.Printf("ERROR userが見つかりませんでした。 userId=%s", userId)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(404)
-		errorModel := ua.errorRepository.GetErrorResponse(myError.NOT_FOUND_USER_ERR_MSG)
-		res, _ := json.Marshal(errorModel)
-		w.Write(res)
+		util.CreateErrorResponse(w, err, userId)
+		return
 	}
 	users := []*model.User{user}
-	resModel := ua.responseRepository.GetResponse(http.StatusOK, "ユーザ情報取得に成功しました。", int64(len(users)), users)
+	resModel := util.GetResponse(http.StatusOK, "ユーザ情報取得に成功しました。", int64(len(users)), users)
 	res, _ := json.Marshal(resModel)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -70,16 +64,18 @@ func (ua userApplication) GetUserById(w http.ResponseWriter, r *http.Request, us
 
 // ユーザ作成
 func (ua userApplication) CreateUser(w http.ResponseWriter, r *http.Request) {
+	log.Printf("INFO [CreateUser] Application logic start")
 	body, _ := ioutil.ReadAll(r.Body)
 
 	var user *model.User
 	json.Unmarshal(body, &user)
 	err := ua.firestoreRepository.CreateUser(user)
 	if err != nil {
-		log.Fatal(err)
+		util.CreateErrorResponse(w, err, "")
+		return
 	}
 
-	resModel := ua.responseRepository.GetResponse(http.StatusCreated, "作成に成功しました。", 0, nil)
+	resModel := util.GetResponse(http.StatusCreated, "作成に成功しました。", 0, nil)
 	res, _ := json.Marshal(resModel)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(res)
@@ -87,18 +83,13 @@ func (ua userApplication) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 // ユーザ更新
 func (ua userApplication) UpdateUser(w http.ResponseWriter, r *http.Request, userId string) {
-
+	log.Printf("INFO [UpdateUser] Application logic start")
 	// user存在 チェック
 	_, err := ua.firestoreRepository.GetUserById(userId)
 	if err != nil {
-		log.Printf("ERROR userが見つかりませんでした。 userId=%s", userId)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(404)
-		errorModel := ua.errorRepository.GetErrorResponse(myError.NOT_FOUND_USER_ERR_MSG)
-		res, _ := json.Marshal(errorModel)
-		w.Write(res)
+		util.CreateErrorResponse(w, err, userId)
+		return
 	}
-
 	body, _ := ioutil.ReadAll(r.Body)
 
 	var newUser *model.User
@@ -106,10 +97,11 @@ func (ua userApplication) UpdateUser(w http.ResponseWriter, r *http.Request, use
 	newUser.Id = userId
 	err = ua.firestoreRepository.UpdateUser(newUser)
 	if err != nil {
-		log.Fatal(err)
+		util.CreateErrorResponse(w, err, userId)
+		return
 	}
 
-	resModel := ua.responseRepository.GetResponse(http.StatusNoContent, "更新に成功しました。", 0, nil)
+	resModel := util.GetResponse(http.StatusNoContent, "更新に成功しました。", 0, nil)
 	res, _ := json.Marshal(resModel)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(res)
@@ -117,22 +109,21 @@ func (ua userApplication) UpdateUser(w http.ResponseWriter, r *http.Request, use
 
 // ユーザ削除
 func (ua userApplication) DeleteUser(w http.ResponseWriter, r *http.Request, userId string) {
+	log.Printf("INFO [DeleteUser] Application logic start")
 	// user存在 チェック
 	_, err := ua.firestoreRepository.GetUserById(userId)
 	if err != nil {
-		log.Printf("ERROR userが見つかりませんでした。 userId=%s", userId)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(404)
-		errorModel := ua.errorRepository.GetErrorResponse(myError.NOT_FOUND_USER_ERR_MSG)
-		res, _ := json.Marshal(errorModel)
-		w.Write(res)
+		util.CreateErrorResponse(w, err, userId)
+		return
 	}
 
 	err = ua.firestoreRepository.DeleteUser(userId)
 	if err != nil {
-		log.Fatal(err)
+		util.CreateErrorResponse(w, err, userId)
+		return
 	}
-	resModel := ua.responseRepository.GetResponse(http.StatusNoContent, "削除に成功しました。", 0, nil)
+
+	resModel := util.GetResponse(http.StatusNoContent, "削除に成功しました。", 0, nil)
 	res, _ := json.Marshal(resModel)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(res)
