@@ -6,7 +6,6 @@ import (
 
 	"github.com/MoriTomo7315/go-user-rest-api/application"
 	"github.com/MoriTomo7315/go-user-rest-api/controller"
-	"github.com/MoriTomo7315/go-user-rest-api/infrastructure"
 	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/persistence"
 )
 
@@ -23,13 +22,9 @@ func main() {
 		DDD依存関係を定義
 		Infrastructure → Application → Controller
 	*/
-	// response作成infrastructure
-	responseFactory := infrastructure.NewResponseFactory()
-	// error用infrastructure
-	errorHandling := infrastructure.NewErrorHandling()
 	// firestore用infrastructure
 	firestoreClient := persistence.NewFirestoreClient()
-	userApplication := application.NewUserApplication(firestoreClient, responseFactory, errorHandling)
+	userApplication := application.NewUserApplication(firestoreClient)
 	userController := controller.NewUserController(userApplication)
 	//サーバーにController(ハンドラ)を登録
 	log.Printf("/api/users   start")
