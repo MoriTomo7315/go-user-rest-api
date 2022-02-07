@@ -2,9 +2,7 @@ package persistence
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
-	"os"
 	"time"
 
 	firestore "cloud.google.com/go/firestore"
@@ -12,7 +10,6 @@ import (
 	"github.com/MoriTomo7315/go-user-rest-api/domain/define"
 	"github.com/MoriTomo7315/go-user-rest-api/domain/model"
 	"github.com/MoriTomo7315/go-user-rest-api/domain/repository"
-	"github.com/joho/godotenv"
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
 )
@@ -21,10 +18,6 @@ type firestoreClient struct{}
 
 func NewFirestoreClient() repository.FirestoreRepository {
 	return &firestoreClient{}
-}
-
-func loadEnvFile() error {
-	return godotenv.Load(fmt.Sprintf("./.env.%s", os.Getenv("GO_ENV")))
 }
 
 func initFireStoreClient(ctx context.Context) (*firestore.Client, error) {
@@ -46,13 +39,6 @@ func initFireStoreClient(ctx context.Context) (*firestore.Client, error) {
 // firestoreから全ユーザの情報を取得する
 func (f *firestoreClient) GetUsers() (users []*model.User, err error) {
 	log.Printf("INFO [GetUsers] connecting firestore start.")
-
-	err = loadEnvFile()
-	if err != nil {
-		// .env読めなかった場合の処理
-		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return nil, define.SYSTEM_ERR
-	}
 
 	// init firestore client
 	ctx := context.Background()
@@ -92,13 +78,6 @@ func (f *firestoreClient) GetUsers() (users []*model.User, err error) {
 func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
 	log.Printf("INFO [GetUserById] connecting firestore start. id=%s", id)
 
-	err = loadEnvFile()
-	if err != nil {
-		// .env読めなかった場合の処理
-		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return nil, define.SYSTEM_ERR
-	}
-
 	// init firestore client
 	ctx := context.Background()
 	client, err := initFireStoreClient(ctx)
@@ -131,13 +110,6 @@ func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
 func (f *firestoreClient) CreateUser(user *model.User) (err error) {
 	log.Printf("INFO [CreateUser] connecting firestore start. name=%v", user)
 
-	err = loadEnvFile()
-	if err != nil {
-		// .env読めなかった場合の処理
-		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return define.SYSTEM_ERR
-	}
-
 	// init firestore client
 	ctx := context.Background()
 	client, err := initFireStoreClient(ctx)
@@ -167,13 +139,6 @@ func (f *firestoreClient) CreateUser(user *model.User) (err error) {
 func (f *firestoreClient) UpdateUser(user *model.User) (err error) {
 	log.Printf("INFO [UpdateUser] connecting firestore start. user=%v", user)
 
-	err = loadEnvFile()
-	if err != nil {
-		// .env読めなかった場合の処理
-		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return define.SYSTEM_ERR
-	}
-
 	// init firestore client
 	ctx := context.Background()
 	client, err := initFireStoreClient(ctx)
@@ -196,7 +161,6 @@ func (f *firestoreClient) UpdateUser(user *model.User) (err error) {
 		return define.FAILED_UPDATE_USER
 	}
 
-
 	log.Printf("INFO [UpdateUser] connecting firestore end.")
 	return nil
 }
@@ -204,13 +168,6 @@ func (f *firestoreClient) UpdateUser(user *model.User) (err error) {
 // firestoreのユーザ情報を削除する
 func (f *firestoreClient) DeleteUser(id string) (err error) {
 	log.Printf("INFO [DeleteUser] connecting firestore start. userId=%v", id)
-
-	err = loadEnvFile()
-	if err != nil {
-		// .env読めなかった場合の処理
-		log.Printf("ERROR .envファイル読み込み失敗 err=%v", err)
-		return define.SYSTEM_ERR
-	}
 
 	// init firestore client
 	ctx := context.Background()
