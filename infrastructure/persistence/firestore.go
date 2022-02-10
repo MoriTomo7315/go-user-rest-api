@@ -124,7 +124,7 @@ func (f *firestoreClient) CreateUser(user *model.User) (err error) {
 		"name":       user.Name,
 		"prefecture": user.Prefecture,
 		"createdAt":  time.Now(),
-		"updated":    nil,
+		"updatedAt":  nil,
 	})
 	if err != nil {
 		log.Printf("ERROR firestoreのusersコレクションの作成に失敗 err=%v", err)
