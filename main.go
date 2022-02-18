@@ -8,13 +8,16 @@ import (
 
 	"github.com/MoriTomo7315/go-user-rest-api/application"
 	"github.com/MoriTomo7315/go-user-rest-api/controller"
+	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/logger"
 	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/persistence"
 	"github.com/joho/godotenv"
 )
 
 func main() {
+
 	//log設定
-	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Llongfile)
+	log.SetFlags(0)
+	// log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Llongfile)
 
 	// envファイル読み込み
 	_ = godotenv.Load(fmt.Sprintf("./.env.%s", os.Getenv("GO_ENV")))
@@ -33,7 +36,7 @@ func main() {
 	userApplication := application.NewUserApplication(firestoreClient)
 	userController := controller.NewUserController(userApplication)
 	//サーバーにController(ハンドラ)を登録
-	log.Printf("/api/users   start")
+	log.Printf(logger.InfoLogEntry("/api/users   start"))
 
 	http.HandleFunc("/api/users", userController.HandlerHttpRequest)
 	http.HandleFunc("/api/users/", userController.HandlerHttpRequestWithParameter)

@@ -2,22 +2,22 @@ package util
 
 import (
 	"log"
-	
+
 	"github.com/MoriTomo7315/go-user-rest-api/domain/model"
+	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/logger"
 )
 
-
 func GetResponse(status int32, message string, count int64, users []*model.User) *model.ResponseModel {
-	log.Printf("INFO start creating response")
+	log.Printf(logger.InfoLogEntry("start creating response"))
 
 	res := &model.ResponseModel{
-		Status: status,
-		Message: message,
+		Status:    status,
+		Message:   message,
 		UserCount: count,
-		Users: users,
+		Users:     users,
 	}
 
-	log.Printf("INFO end creating response")
+	log.Printf(logger.InfoLogEntry("end creating response"))
 
 	return res
 }
