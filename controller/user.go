@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/MoriTomo7315/go-user-rest-api/application"
+	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/logger"
 )
 
 type UserController interface {
@@ -24,7 +25,7 @@ func NewUserController(ua application.UserApplication) UserController {
 }
 
 func (uc *userController) HandlerHttpRequest(w http.ResponseWriter, r *http.Request) {
-	log.Printf("INFO [/api/users] START ===========")
+	log.Printf(logger.InfoLogEntry("[/api/users] START ==========="))
 	switch r.Method {
 	case http.MethodGet:
 		/*
@@ -42,11 +43,11 @@ func (uc *userController) HandlerHttpRequest(w http.ResponseWriter, r *http.Requ
 		*/
 		w.WriteHeader(405)
 	}
-	log.Printf("INFO [/api/users] END ===========")
+	log.Printf(logger.InfoLogEntry("[/api/users] END ==========="))
 }
 
 func (uc *userController) HandlerHttpRequestWithParameter(w http.ResponseWriter, r *http.Request) {
-	log.Printf("INFO [/api/users/] START ===========")
+	log.Printf(logger.InfoLogEntry("[/api/users/] START ==========="))
 	userId := strings.TrimPrefix(r.URL.Path, "/api/users/")
 	switch r.Method {
 	case http.MethodGet:
@@ -85,5 +86,5 @@ func (uc *userController) HandlerHttpRequestWithParameter(w http.ResponseWriter,
 		*/
 		w.WriteHeader(405)
 	}
-	log.Printf("INFO [/api/users/] END ===========")
+	log.Printf(logger.InfoLogEntry("[/api/users/] END ==========="))
 }

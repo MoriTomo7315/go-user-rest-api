@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/MoriTomo7315/go-user-rest-api/domain/define"
 	"github.com/MoriTomo7315/go-user-rest-api/domain/model"
 	"github.com/MoriTomo7315/go-user-rest-api/domain/repository"
+	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/logger"
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
 )
@@ -24,13 +26,13 @@ func initFireStoreClient(ctx context.Context) (*firestore.Client, error) {
 	// .envのGOOGLE_APPLICATION_CREDENTIALSから暗黙的に設定を読み取る
 	app, err := firebase.NewApp(ctx, nil)
 	if err != nil {
-		log.Printf("ERROR firebase.NewAppに失敗 %v", err)
+		log.Printf(logger.ErrorLogEntry(fmt.Sprint("firebase.NewAppに失敗 %s", err.Error())))
 		return nil, err
 	}
 
 	client, err := app.Firestore(ctx)
 	if err != nil {
-		log.Printf("ERROR firestore client 初期化に失敗 %v", err)
+		log.Printf(logger.ErrorLogEntry(fmt.Sprint("firestore client 初期化に失敗 %s", err.Error())))
 		return nil, err
 	}
 	return client, nil
@@ -38,7 +40,7 @@ func initFireStoreClient(ctx context.Context) (*firestore.Client, error) {
 
 // firestoreから全ユーザの情報を取得する
 func (f *firestoreClient) GetUsers() (users []*model.User, err error) {
-	log.Printf("INFO [GetUsers] connecting firestore start.")
+	log.Printf(logger.InfoLogEntry("[GetUsers] connecting firestore start."))
 
 	// init firestore client
 	ctx := context.Background()
@@ -46,7 +48,7 @@ func (f *firestoreClient) GetUsers() (users []*model.User, err error) {
 	defer client.Close()
 
 	if err != nil {
-		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
+		log.Printf(logger.ErrorLogEntry(fmt.Sprint("firestore clientの初期化に失敗 err=%s", err.Error())))
 		return nil, define.SYSTEM_ERR
 	}
 
@@ -57,7 +59,7 @@ func (f *firestoreClient) GetUsers() (users []*model.User, err error) {
 			break
 		}
 		if err != nil {
-			log.Printf("ERROR firestoreからusersコレクションの検索に失敗 err=%v", err)
+			log.Printf(logger.ErrorLogEntry(fmt.Sprint("firestoreからusersコレクションの検索に失敗 err=%s", err.Error())))
 			return nil, define.NOT_FOUND_USER
 		}
 		// Uidをmap[string]interface{}に含める
@@ -70,13 +72,13 @@ func (f *firestoreClient) GetUsers() (users []*model.User, err error) {
 		users = append(users, user)
 	}
 
-	log.Printf("INFO [GetUsers] connecting firestore end.")
+	log.Printf(logger.InfoLogEntry("[GetUsers] connecting firestore end."))
 	return users, nil
 }
 
 // firestoreからユーザの情報を取得する
 func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
-	log.Printf("INFO [GetUserById] connecting firestore start. id=%s", id)
+	log.Printf(logger.InfoLogEntry(fmt.Sprint("[GetUserById] connecting firestore start. id=%s", id)))
 
 	// init firestore client
 	ctx := context.Background()
@@ -84,13 +86,13 @@ func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
 	defer client.Close()
 
 	if err != nil {
-		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
+		log.Printf(logger.ErrorLogEntry(fmt.Sprint("firestore clientの初期化に失敗 err=%s", err.Error())))
 		return nil, define.SYSTEM_ERR
 	}
 
 	userDocSnap, err := client.Collection("users").Doc(id).Get(ctx)
 	if err != nil {
-		log.Printf("ERROR firestoreからusersコレクションの検索に失敗 id=%s, err=%v", id, err)
+		log.Printf(logger.ErrorLogEntry(fmt.Sprint("firestoreからusersコレクションの検索に失敗 id=%s, err=%s", id, err.Error())))
 		return nil, define.NOT_FOUND_USER
 	}
 
@@ -102,13 +104,13 @@ func (f *firestoreClient) GetUserById(id string) (user *model.User, err error) {
 	jsonuserData, _ := json.Marshal(userData)
 	json.Unmarshal(jsonuserData, &user)
 
-	log.Printf("INFO [GetUserById] connecting firestore end. id=%s", id)
+	log.Printf(logger.InfoLogEntry(fmt.Sprint("[GetUserById] connecting firestore end. id=%s", id)))
 	return user, nil
 }
 
 // firestoreにユーザの情報を作成する
 func (f *firestoreClient) CreateUser(user *model.User) (err error) {
-	log.Printf("INFO [CreateUser] connecting firestore start. name=%v", user)
+	log.Printf(logger.InfoLogEntry(fmt.Sprint("[CreateUser] connecting firestore start. name=%v", user)))
 
 	// init firestore client
 	ctx := context.Background()
@@ -116,7 +118,7 @@ func (f *firestoreClient) CreateUser(user *model.User) (err error) {
 	defer client.Close()
 
 	if err != nil {
-		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
+		log.Printf(logger.ErrorLogEntry(fmt.Sprint("firestore clientの初期化に失敗 err=%s", err.Error())))
 		return define.SYSTEM_ERR
 	}
 
@@ -127,17 +129,17 @@ func (f *firestoreClient) CreateUser(user *model.User) (err error) {
 		"updatedAt":  nil,
 	})
 	if err != nil {
-		log.Printf("ERROR firestoreのusersコレクションの作成に失敗 err=%v", err)
+		log.Printf(logger.ErrorLogEntry(fmt.Sprint("firestoreのusersコレクションの作成に失敗 err=%s", err.Error())))
 		return define.FAILED_CREATE_USER
 	}
 
-	log.Printf("INFO [CreateUser] connecting firestore end.")
+	log.Printf(logger.InfoLogEntry(fmt.Sprint("[CreateUser] connecting firestore end.")))
 	return nil
 }
 
 // firestoreのユーザ情報を更新する
 func (f *firestoreClient) UpdateUser(user *model.User) (err error) {
-	log.Printf("INFO [UpdateUser] connecting firestore start. user=%v", user)
+	log.Printf(logger.InfoLogEntry(fmt.Sprint("[UpdateUser] connecting firestore start. user=%v", user)))
 
 	// init firestore client
 	ctx := context.Background()
@@ -145,7 +147,7 @@ func (f *firestoreClient) UpdateUser(user *model.User) (err error) {
 	defer client.Close()
 
 	if err != nil {
-		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
+		log.Printf(logger.ErrorLogEntry(fmt.Sprint("firestore clientの初期化に失敗 err=%s", err.Error())))
 		return define.SYSTEM_ERR
 	}
 
@@ -157,17 +159,17 @@ func (f *firestoreClient) UpdateUser(user *model.User) (err error) {
 	})
 
 	if err != nil {
-		log.Printf("ERROR firestoreのusersコレクションの更新に失敗 id=%s, err=%v", user.Id, err)
+		log.Printf(logger.ErrorLogEntry(fmt.Sprint("firestoreのusersコレクションの更新に失敗 id=%s, err=%s", user.Id, err.Error())))
 		return define.FAILED_UPDATE_USER
 	}
 
-	log.Printf("INFO [UpdateUser] connecting firestore end.")
+	log.Printf(logger.InfoLogEntry("[UpdateUser] connecting firestore end."))
 	return nil
 }
 
 // firestoreのユーザ情報を削除する
 func (f *firestoreClient) DeleteUser(id string) (err error) {
-	log.Printf("INFO [DeleteUser] connecting firestore start. userId=%v", id)
+	log.Printf(logger.InfoLogEntry(fmt.Sprint("[DeleteUser] connecting firestore start. userId=%v", id)))
 
 	// init firestore client
 	ctx := context.Background()
@@ -175,17 +177,17 @@ func (f *firestoreClient) DeleteUser(id string) (err error) {
 	defer client.Close()
 
 	if err != nil {
-		log.Printf("ERROR firestore clientの初期化に失敗 err=%v", err)
+		log.Printf(logger.ErrorLogEntry(fmt.Sprint("firestore clientの初期化に失敗 err=%s", err.Error())))
 		return define.SYSTEM_ERR
 	}
 
 	_, err = client.Collection("users").Doc(id).Delete(ctx)
 
 	if err != nil {
-		log.Printf("ERROR firestoreのusersコレクションの削除に失敗 id=%s, err=%v", id, err)
+		log.Printf(logger.ErrorLogEntry(fmt.Sprint("firestoreのusersコレクションの削除に失敗 id=%s, err=%s", id, err.Error())))
 		return define.FAILED_DELETE_USER
 	}
 
-	log.Printf("INFO [DeleteUser] connecting firestore end.")
+	log.Printf(logger.InfoLogEntry("[DeleteUser] connecting firestore end."))
 	return nil
 }
