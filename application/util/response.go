@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/MoriTomo7315/go-user-rest-api/domain/model"
-	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/logger"
+	logger "github.com/MoriTomo7315/go-user-rest-api/infrastructure/gcplogger"
 )
 
 func GetResponse(status int32, message string, count int64, users []*model.User) *model.ResponseModel {

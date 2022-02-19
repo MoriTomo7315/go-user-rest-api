@@ -8,7 +8,7 @@ import (
 
 	"github.com/MoriTomo7315/go-user-rest-api/application"
 	"github.com/MoriTomo7315/go-user-rest-api/controller"
-	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/logger"
+	logger "github.com/MoriTomo7315/go-user-rest-api/infrastructure/gcplogger"
 	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/persistence"
 	"github.com/joho/godotenv"
 )

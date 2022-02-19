@@ -1,4 +1,4 @@
-package logger
+package gcplogger
 
 import (
 	"github.com/MoriTomo7315/go-user-rest-api/domain/model"

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/MoriTomo7315/go-user-rest-api/application"
-	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/logger"
+	logger "github.com/MoriTomo7315/go-user-rest-api/infrastructure/gcplogger"
 )
 
 type UserController interface {

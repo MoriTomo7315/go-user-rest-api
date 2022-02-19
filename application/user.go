@@ -9,7 +9,7 @@ import (
 	"github.com/MoriTomo7315/go-user-rest-api/application/util"
 	"github.com/MoriTomo7315/go-user-rest-api/domain/model"
 	"github.com/MoriTomo7315/go-user-rest-api/domain/repository"
-	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/logger"
+	logger "github.com/MoriTomo7315/go-user-rest-api/infrastructure/gcplogger"
 )
 
 // インターフェース
