@@ -8,7 +8,7 @@ import (
 
 	"github.com/MoriTomo7315/go-user-rest-api/application"
 	"github.com/MoriTomo7315/go-user-rest-api/controller"
-	logger "github.com/MoriTomo7315/go-user-rest-api/infrastructure/gcplogger"
+	logger "github.com/MoriTomo7315/go-user-rest-api/gcplogger"
 	"github.com/MoriTomo7315/go-user-rest-api/infrastructure/persistence"
 	"github.com/joho/godotenv"
 )
@@ -36,7 +36,7 @@ func main() {
 	userApplication := application.NewUserApplication(firestoreClient)
 	userController := controller.NewUserController(userApplication)
 	//サーバーにController(ハンドラ)を登録
-	log.Printf(logger.InfoLogEntry("/api/users   start"))
+	log.Printf(logger.InfoLogEntry("/api/users   start", ""))
 
 	http.HandleFunc("/api/users", userController.HandlerHttpRequest)
 	http.HandleFunc("/api/users/", userController.HandlerHttpRequestWithParameter)
